@@ -14,6 +14,7 @@ class NeuralNet:
         Constructor
         '''
         self.layers=[]
+        self.mode = True
         
     
     def setInputLayer(self,inputLayer):    
@@ -39,11 +40,15 @@ class NeuralNet:
         for layer in self.layers:
             layer.setDataSize(self.dataSize);
             layer.initialize()
+    
+    def setMode(self,train_test):
+        #True train; False test
+        self.mode = train_test
             
     
     def forward(self):
         for layer in self.layers:
-            layer.forward()
+            layer.forward(self.mode)
 #         currentLayer = layer1
 #         while(True):
 #             currentLayer.forward()
@@ -73,12 +78,22 @@ class NeuralNet:
             else:
                 break    
 
+    def printLayers(self,file):
+        i = 0
+        for layer in self.layers:
+            i = i +1
+            file.write("第  "+str(i)+" 层: \n")
+            layer.outputInfo(file)
 
     def train(self):
         self.initialize()    
-        for i in range(10000):
+        file = open("network.txt","w")
+        for i in range(1000):
             self.forward()
+#             file.write("第  "+str(i)+" 轮: \n")
+#             self.printLayers(file)
             self.backward()
+        file.close()
         self.avgB()
         
         

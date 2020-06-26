@@ -17,8 +17,16 @@ class Activation(object):
 
 class Sigmoid(Activation):
     
+    def __init__(self):
+        self.max = 50
+        self.min = -50
+        
+    
     def activate(self,layer):
-        return 1 / (1 + np.exp(-layer.Z)) 
+        
+        tempz = np.maximum(self.min,np.minimum(self.max,layer.Z))
+#         return 1 / (1 + np.exp(-layer.Z)) 
+        return 1 / (1 + np.exp(-tempz)) 
     
     def derivative(self,layer):
         return layer.A * (1 - layer.A)
