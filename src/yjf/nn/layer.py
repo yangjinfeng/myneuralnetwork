@@ -10,13 +10,24 @@ from yjf.nn.activate import factory
 class Layer:
     def __init__(self,N,actvaname,keep_prob):
         self.N = N     #当前层
-        self.alpha = 0.01 #learning rate
         self.actva = factory(actvaname)
         self.keep_prob = keep_prob #dropout
+        
+        self.alpha = 0.01 #learning rate
         self.lambd = 0.01 #L2的参数λ
         self.L2_Reg = True
-
-        
+        #初始化成员
+        self.M = None
+        self.W = None
+        self.dW = None
+        self.B = None
+        self.dB = None
+        self.A = None
+        self.dA = None
+        self.Z = None
+        self.dZ = None
+        self.preLayer = None
+        self.nextLayer = None
 
     def setDataSize(self,dataSize):
         self.M = dataSize
@@ -31,10 +42,15 @@ class Layer:
         self.W = np.random.randn(self.N,self.preLayer.N) * 0.01;
 #         self.W = np.random.randn(self.N,self.preLayer.N) * np.sqrt(2/(self.preLayer.N));
 #         self.B = np.random.randn(self.N,self.M)*0.001;
-        self.B = np.zeros((self.N,self.M),dtype=float);
+#         self.B = np.zeros((self.N,self.M),dtype=float);
+        self.B = np.random.randn(self.N,self.M) * 0.01
         
-
-        
+    def copy(self):
+        newlayer = Layer(self.N,"",self.keep_prob)
+        newlayer.W = self.W
+        newlayer.B = self.B
+        newlayer.actva = self.actva
+        return newlayer
         
     def forward(self,dropout):
         
@@ -81,25 +97,25 @@ class Layer:
 
     
     def outputInfo(self,outer):
-        if(hasattr(self,'W')):
+        if(self.W):
             outer.write("W: \n")
             outer.write(str(self.W)+"\n")
 #         if(hasattr(self,'dW')):
 #             outer.write("dW: \n")
 #             outer.write(str(self.dW)+"\n")
-        if(hasattr(self,'B')):
+        if(self.B):
             outer.write("B: \n")
             outer.write(str(self.B)+"\n")
 #         if(hasattr(self,'dB')):
 #             outer.write("dB: \n")
 #             outer.write(str(self.dB)+"\n")
-        if(hasattr(self,'Z')):
+        if(self.Z):
             outer.write("Z: \n")
             outer.write(str(self.Z)+"\n")
 #         if(hasattr(self,'dZ')):
 #             outer.write("dZ: \n")
 #             outer.write(str(self.dZ)+"\n")
-        if(hasattr(self,'A')):
+        if(self.A):
             outer.write("A: \n")
             outer.write(str(self.A)+"\n")
 #         if(hasattr(self,'dA')):
@@ -134,6 +150,10 @@ class InputLayer(Layer):
    
 class OutputLayer(Layer):
     
+    
+    
+    def loss(self):
+        return np.multiply(-np.log(self.A), self.Y) + np.multiply(-np.log(1 - self.A), 1 - self.Y) 
     
     '''
     a=y^=σ(z)

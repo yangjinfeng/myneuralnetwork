@@ -41,6 +41,14 @@ class NeuralNet:
             layer.setDataSize(self.dataSize);
             layer.initialize()
     
+    def copy(self):
+        newnet = NeuralNet()
+        for layer in self.layers:
+            newlayer = layer.copy()
+            newnet.addLayer(newlayer)
+        return newnet
+            
+    
     def setMode(self,train_test):
         #True train; False test
         self.mode = train_test
@@ -68,6 +76,9 @@ class NeuralNet:
 
     def getOutput(self):
         return self.layers[len(self.layers)-1].A
+    
+    def getLoss(self):
+        return self.layers[len(self.layers)-1].loss()
     
     def backward(self):
         currentLayer = self.layers[len(self.layers)-1]
