@@ -48,9 +48,9 @@ class ReLU(Activation):
         return np.maximum(0, layer.Z)
     
     def derivative(self,layer):
-        x = layer.Z
-        x[x<=0] = 0
-        x[x>0] = 1
+        x = np.copy(layer.Z)   #这是个坑，一定要先拷贝出来
+        x[x>=0] = 1  #
+        x[x<0] = 0   #这两行代码的顺序不能变
         return x
 
 
@@ -60,9 +60,9 @@ class LeakyReLU(Activation):
         return np.maximum(0.01*layer.Z, layer.Z)
     
     def derivative(self,layer):
-        x = layer.Z
-        x[x<=0] = 0.01
-        x[x>0] = 1
+        x = np.copy(layer.Z)   #这是个坑，一定要先拷贝出来
+        x[x>=0] = 1
+        x[x<0] = 0.01
         return x
 
 

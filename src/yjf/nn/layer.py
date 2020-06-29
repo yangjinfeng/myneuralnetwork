@@ -42,8 +42,8 @@ class Layer:
         self.W = np.random.randn(self.N,self.preLayer.N) * 0.01;
 #         self.W = np.random.randn(self.N,self.preLayer.N) * np.sqrt(2/(self.preLayer.N));
 #         self.B = np.random.randn(self.N,self.M)*0.001;
-#         self.B = np.zeros((self.N,self.M),dtype=float);
-        self.B = np.random.randn(self.N,self.M) * 0.01
+        self.B = np.zeros((self.N,self.M),dtype=float);
+#         self.B = np.random.randn(self.N,self.M) * 0.01
         
     def copy(self):
         newlayer = Layer(self.N,"",self.keep_prob)
@@ -97,30 +97,30 @@ class Layer:
 
     
     def outputInfo(self,outer):
-        if(self.W):
+        if(self.W is not None):
             outer.write("W: \n")
             outer.write(str(self.W)+"\n")
-#         if(hasattr(self,'dW')):
-#             outer.write("dW: \n")
-#             outer.write(str(self.dW)+"\n")
-        if(self.B):
+        if(self.dW is not None):
+            outer.write("dW: \n")
+            outer.write(str(self.dW)+"\n")
+        if(self.B is not None):
             outer.write("B: \n")
             outer.write(str(self.B)+"\n")
-#         if(hasattr(self,'dB')):
-#             outer.write("dB: \n")
-#             outer.write(str(self.dB)+"\n")
-        if(self.Z):
+        if(self.dB is not None):
+            outer.write("dB: \n")
+            outer.write(str(self.dB)+"\n")
+        if(self.Z is not None):
             outer.write("Z: \n")
             outer.write(str(self.Z)+"\n")
-#         if(hasattr(self,'dZ')):
-#             outer.write("dZ: \n")
-#             outer.write(str(self.dZ)+"\n")
-        if(self.A):
+        if(self.dZ is not None):
+            outer.write("dZ: \n")
+            outer.write(str(self.dZ)+"\n")
+        if(self.A is not None):
             outer.write("A: \n")
             outer.write(str(self.A)+"\n")
-#         if(hasattr(self,'dA')):
-#             outer.write("dA: \n")
-#             outer.write(str(self.dA)+"\n")
+        if(self.dA is not None):
+            outer.write("dA: \n")
+            outer.write(str(self.dA)+"\n")
            
     
     

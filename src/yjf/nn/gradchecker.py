@@ -8,6 +8,7 @@ from yjf.nn.wbvector import ParamVectorConverter
 import numpy as np
 from yjf.nn.layer import InputLayer,Layer,OutputLayer
 from yjf.nn.network import NeuralNet
+from yjf.data.datagen import DataGenerator
 
 
 class Checker(object):
@@ -54,7 +55,7 @@ class Checker(object):
             approxGrad[i] = (loss_plus[i] - loss_minus[i]) / (2.0 * self.epsilon)            
 #             approxGrad[i] = (loss_plus[i] - loss_minus[i] + 2*origin*self.epsilon*0.01) / (2.0 * self.epsilon)
         
-        ParamVectorConverter.fillNet(self.network, paramVec)
+        ParamVectorConverter.fillNet(self.network, paramVec) #还原最开始的网络参数
             
         return approxGrad
     
@@ -78,14 +79,19 @@ if __name__ == '__main__':
     net = NeuralNet()
     
     inputlayer = InputLayer()
-    inputlayer.setInputData(np.array([[1,2,3]]).T)    
+#     inputlayer.setInputData(np.array([[1,2,3]]).T)    
+    
+    Tr_x, Tr_y, T_x,T_y= DataGenerator.loadDataset()
+    inputlayer.setInputData(Tr_x[:,0].reshape(2,1))
+    
     net.setInputLayer(inputlayer)
     
     net.addLayer(Layer(4,"ReLU",1))    
     net.addLayer(Layer(4,"ReLU",1)) #这一层设为dropout的话，output层的Z会非常大
     
     outputlayer =  OutputLayer(1,"sigmoid",1)
-    outputlayer.setExpectedOutput(np.array([0]).reshape(1,1))    
+#     outputlayer.setExpectedOutput(np.array([0]).reshape(1,1))   
+    outputlayer.setExpectedOutput(Tr_y[:,0].reshape(1,1)) 
     net.addLayer(outputlayer)
     net.initialize()
     

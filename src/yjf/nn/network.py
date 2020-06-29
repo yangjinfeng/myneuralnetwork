@@ -9,10 +9,11 @@ import numpy as np
 class NeuralNet:
 
 
-    def __init__(self):
+    def __init__(self,iters=100):
         '''
         Constructor
         '''
+        self.iters = iters
         self.layers=[]
         self.mode = True
         
@@ -99,7 +100,7 @@ class NeuralNet:
     def train(self):
         self.initialize()    
         file = open("network.txt","w")
-        for i in range(1000):
+        for i in range(self.iters):
             self.forward()
 #             file.write("第  "+str(i)+" 轮: \n")
 #             self.printLayers(file)
