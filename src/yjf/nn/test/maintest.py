@@ -41,7 +41,7 @@ def test1():
 
 
 def test2():
-    net = NeuralNet(1000)
+    net = NeuralNet(10000)
     np.random.seed(1)
     
     Tr_x, Tr_y, T_x,T_y= DataGenerator.loadDataset()
@@ -50,8 +50,8 @@ def test2():
     inputlayer.setInputData(Tr_x)    
     net.setInputLayer(inputlayer)
     
-    net.addLayer(Layer(4,"sigmoid",1))    
-    net.addLayer(Layer(4,"sigmoid",1)) #这一层设为dropout的话，output层的Z会非常大
+    net.addLayer(Layer(4,"ReLU",1))    
+    net.addLayer(Layer(4,"ReLU",1)) #这一层设为dropout的话，output层的Z会非常大
     
     outputlayer =  OutputLayer(1,"sigmoid",1)
     outputlayer.setExpectedOutput(Tr_y)    
@@ -61,7 +61,7 @@ def test2():
     tic = time.time()
     net.train()            
     toc = time.time()
-    print(net.getOutput())
+    print(net.getFittingResult())
     print("time lasted: " + str(1000*(toc-tic)))
     
     print("begin to predict ... " )
@@ -70,7 +70,7 @@ def test2():
     net.setInputLayerForPredict(inputlayer)
     net.setMode(False)
     net.forward()
-    print(net.getOutput())
+    print(net.getFittingResult())
 
 if __name__ == '__main__':
     

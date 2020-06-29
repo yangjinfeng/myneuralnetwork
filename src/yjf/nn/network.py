@@ -38,7 +38,11 @@ class NeuralNet:
     
     def initialize(self):
         self.layers[0].setPreLayer(self.inputLayer)
+        index = 0
+        self.inputLayer.setLayerIndex(index)
         for layer in self.layers:
+            index = index + 1
+            layer.setLayerIndex(index) #便于调试
             layer.setDataSize(self.dataSize);
             layer.initialize()
     
@@ -74,12 +78,18 @@ class NeuralNet:
             layer.B = (1/layer.M)* np.sum(layer.B, axis = 1, keepdims=True)
         
 
-
-    def getOutput(self):
+    '''
+        训练样本的拟合结果
+    '''
+    def getFittingResult(self):
         return self.layers[len(self.layers)-1].A
     
+    '''
+        每一个样本的最终损失
+    '''
     def getLoss(self):
         return self.layers[len(self.layers)-1].loss()
+    
     
     def backward(self):
         currentLayer = self.layers[len(self.layers)-1]
@@ -90,11 +100,9 @@ class NeuralNet:
             else:
                 break    
 
+
     def printLayers(self,file):
-        i = 0
         for layer in self.layers:
-            i = i +1
-            file.write("第  "+str(i)+" 层: \n")
             layer.outputInfo(file)
 
     def train(self):

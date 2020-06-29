@@ -28,6 +28,9 @@ class Layer:
         self.dZ = None
         self.preLayer = None
         self.nextLayer = None
+    
+    def setLayerIndex(self,index):
+        self.index = index
 
     def setDataSize(self,dataSize):
         self.M = dataSize
@@ -42,8 +45,8 @@ class Layer:
         self.W = np.random.randn(self.N,self.preLayer.N) * 0.01;
 #         self.W = np.random.randn(self.N,self.preLayer.N) * np.sqrt(2/(self.preLayer.N));
 #         self.B = np.random.randn(self.N,self.M)*0.001;
-        self.B = np.zeros((self.N,self.M),dtype=float);
-#         self.B = np.random.randn(self.N,self.M) * 0.01
+#         self.B = np.zeros((self.N,self.M),dtype=float);
+        self.B = np.random.randn(self.N,self.M) * 0.001
         
     def copy(self):
         newlayer = Layer(self.N,"",self.keep_prob)
@@ -71,17 +74,19 @@ class Layer:
 #             self.dA = self.deriveLoss()
             self.dZ = self.deriveLossByZ()
         else:
-            self.dA = np.matmul(self.nextLayer.W.T, self.nextLayer.dZ)
+#             self.dA = np.matmul(self.nextLayer.W.T, self.nextLayer.dZ) #这个bug找了好久
+            self.dA = np.matmul(self.nextLayer.W0.T, self.nextLayer.dZ)
             self.dZ =  self.dA * self.actva.derivative(self)        
         
 #         self.dZ =  self.dA * self.actva.derivative(self)
-        self.dW = (1/self.M)*np.matmul(self.dZ, self.preLayer.A.T)
+        self.dW = (1/self.M) * np.matmul(self.dZ, self.preLayer.A.T)
         self.dB = (1/self.M) * np.sum(self.dZ, axis = 1, keepdims=True)
         
         #L2 regularization
         weight_decay = 1
         if(self.L2_Reg):
             weight_decay = 1 - self.alpha * self.lambd / self.M
+        self.W0 = np.copy(self.W) #给前一层计算梯度使用
         self.W = self.W * weight_decay - self.alpha * self.dW
         self.B = self.B * weight_decay - self.alpha * self.dB
 
@@ -97,6 +102,7 @@ class Layer:
 
     
     def outputInfo(self,outer):
+        outer.write("第  "+str(self.index)+" 层: \n")
         if(self.W is not None):
             outer.write("W: \n")
             outer.write(str(self.W)+"\n")
@@ -136,10 +142,8 @@ class InputLayer(Layer):
         return (data -self.miu)/self.sigma
     
     def setInputData(self,data):
-#         self.A = np.array([[1,2,3], [4,5,6],[7,8,9],[100,200,300], [400,500,600]]).T
-#         self.Y = np.array([0,0,0,1,1]).reshape(1,5)
-        self.A = self.normalizerData(data)
-#         self.A = data
+        self.A = data
+#         self.A = self.normalizerData(data)
         self.N = data.shape[0]
         self.M = data.shape[1]
 
