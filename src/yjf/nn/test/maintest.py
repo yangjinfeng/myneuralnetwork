@@ -8,6 +8,8 @@ import numpy as np
 from yjf.nn.layer import InputLayer,Layer,OutputLayer
 from yjf.nn.network import NeuralNet
 from yjf.data.datagen import DataGenerator
+from yjf.nn.eval import Evaluator
+from yjf.nn.logger import MyLogger
 import time
 
 def test1():
@@ -41,36 +43,48 @@ def test1():
 
 
 def test2():
-    net = NeuralNet(10000)
+    net = NeuralNet(9700)
     np.random.seed(1)
     
-    Tr_x, Tr_y, T_x,T_y= DataGenerator.loadDataset()
+    Tr_x, Tr_y, T_x,T_y= DataGenerator.loadClassificationDataset()
     
     inputlayer = InputLayer()
     inputlayer.setInputData(Tr_x)    
     net.setInputLayer(inputlayer)
     
-    net.addLayer(Layer(4,"ReLU",1))    
-    net.addLayer(Layer(4,"ReLU",1)) #这一层设为dropout的话，output层的Z会非常大
+    net.addLayer(Layer(40,"ReLU",0.9))   
+#     net.addLayer(Layer(40,"ReLU",0.9)) 
+#     net.addLayer(Layer(4,"ReLU",1))
+#     net.addLayer(Layer(4,"ReLU",1))
+#     net.addLayer(Layer(4,"ReLU",1))
+#     net.addLayer(Layer(4,"sigmoid",1))
+    net.addLayer(Layer(20,"ReLU",0.9)) #这一层设为dropout的话，output层的Z会非常大
     
     outputlayer =  OutputLayer(1,"sigmoid",1)
     outputlayer.setExpectedOutput(Tr_y)    
     net.addLayer(outputlayer)
     
+    logger = MyLogger("loss.log")
+    logger.setNetwork(net)
     print("begin to train ... " )
     tic = time.time()
-    net.train()            
+    net.train(logger)
+    logger.close()            
+    
     toc = time.time()
-    print(net.getFittingResult())
+    fitting = net.getPrediction()
+    eval1 = Evaluator(Tr_y,fitting)
+    print(eval1.eval())
     print("time lasted: " + str(1000*(toc-tic)))
     
     print("begin to predict ... " )
 #     testlayer = InputLayer()
     inputlayer.setInputData(T_x)
     net.setInputLayerForPredict(inputlayer)
-    net.setMode(False)
-    net.forward()
-    print(net.getFittingResult())
+    net.predict()
+    prd = net.getPrediction()
+    eval2 = Evaluator(T_y,prd)
+    print(eval2.eval())
 
 if __name__ == '__main__':
     

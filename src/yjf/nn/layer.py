@@ -6,6 +6,7 @@ Created on 2020年6月22日
 '''
 import numpy as np
 from yjf.nn.activate import factory
+from yjf.nn.cfg import HyperParameter
 
 class Layer:
     def __init__(self,N,actvaname,keep_prob):
@@ -13,9 +14,6 @@ class Layer:
         self.actva = factory(actvaname)
         self.keep_prob = keep_prob #dropout
         
-        self.alpha = 0.01 #learning rate
-        self.lambd = 0.01 #L2的参数λ
-        self.L2_Reg = True
         #初始化成员
         self.M = None
         self.W = None
@@ -28,6 +26,7 @@ class Layer:
         self.dZ = None
         self.preLayer = None
         self.nextLayer = None
+        self.index = -1
     
     def setLayerIndex(self,index):
         self.index = index
@@ -45,8 +44,8 @@ class Layer:
         self.W = np.random.randn(self.N,self.preLayer.N) * 0.01;
 #         self.W = np.random.randn(self.N,self.preLayer.N) * np.sqrt(2/(self.preLayer.N));
 #         self.B = np.random.randn(self.N,self.M)*0.001;
-#         self.B = np.zeros((self.N,self.M),dtype=float);
-        self.B = np.random.randn(self.N,self.M) * 0.001
+#         self.B = np.zeros((self.N,1),dtype=float);
+        self.B = np.random.randn(self.N,1) * 0.001  #对所有样本，B都是一样的
         
     def copy(self):
         newlayer = Layer(self.N,"",self.keep_prob)
@@ -80,15 +79,20 @@ class Layer:
         
 #         self.dZ =  self.dA * self.actva.derivative(self)
         self.dW = (1/self.M) * np.matmul(self.dZ, self.preLayer.A.T)
+        #L2 regularization
+        if(HyperParameter.L2_Reg):
+            L2_dW = (HyperParameter.L2_lambd / self.M) * self.W
+            self.dW = self.dW + L2_dW
+        
         self.dB = (1/self.M) * np.sum(self.dZ, axis = 1, keepdims=True)
         
-        #L2 regularization
-        weight_decay = 1
-        if(self.L2_Reg):
-            weight_decay = 1 - self.alpha * self.lambd / self.M
+#         weight_decay = 1
+#         if(HyperParameter.L2_Reg):
+#             weight_decay = 1 - HyperParameter.alpha * HyperParameter.L2_lambd / self.M
+
         self.W0 = np.copy(self.W) #给前一层计算梯度使用
-        self.W = self.W * weight_decay - self.alpha * self.dW
-        self.B = self.B * weight_decay - self.alpha * self.dB
+        self.W = self.W  - HyperParameter.alpha * self.dW
+        self.B = self.B  - HyperParameter.alpha * self.dB
 
     
 
@@ -154,10 +158,15 @@ class InputLayer(Layer):
    
 class OutputLayer(Layer):
     
+    def setCutoff(self,cutoff):
+        self.cutoff = cutoff
     
-    
+    '''
+        最后一层计算样本的损失
+    '''
     def loss(self):
-        return np.multiply(-np.log(self.A), self.Y) + np.multiply(-np.log(1 - self.A), 1 - self.Y) 
+        eachloss  = np.multiply(-np.log(self.A), self.Y) + np.multiply(-np.log(1 - self.A), 1 - self.Y)
+        return (1/eachloss.shape[1]) * np.sum(eachloss, axis = 1, keepdims=True)[0][0]
     
     '''
     a=y^=σ(z)
@@ -182,4 +191,9 @@ class OutputLayer(Layer):
 
     def isOutputLayer(self):
         return True
-  
+    
+    def predict(self):
+        prdct = np.copy(self.A)
+        prdct[prdct>0.5]=1
+        prdct[prdct<=0.5]=0
+        return prdct

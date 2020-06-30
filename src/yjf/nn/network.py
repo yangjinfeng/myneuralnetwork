@@ -5,6 +5,8 @@ Created on 2020年6月23日
 @author: yangjinfeng
 '''
 import numpy as np
+from yjf.nn.wbvector import ParamVectorConverter
+from yjf.nn.cfg import HyperParameter
 
 class NeuralNet:
 
@@ -15,7 +17,8 @@ class NeuralNet:
         '''
         self.iters = iters
         self.layers=[]
-        self.mode = True
+        self.mode = True  #True train; False test
+        self.iterCounter = 0
         
     
     def setInputLayer(self,inputLayer):    
@@ -54,12 +57,14 @@ class NeuralNet:
         return newnet
             
     
+    #True train; False test
     def setMode(self,train_test):
-        #True train; False test
         self.mode = train_test
             
     
     def forward(self):
+        if self.mode:
+            self.iterCounter = self.iterCounter + 1
         for layer in self.layers:
             layer.forward(self.mode)
 #         currentLayer = layer1
@@ -69,26 +74,23 @@ class NeuralNet:
 #                 currentLayer = currentLayer.nextLayer
 #             else:
 #                 break
-    '''
-            训练结束后，对B在训练样本上求平均，B是一个列向量（4,1）
-             对预测来说，如果输入X是(3,1),W是（4,3），W×X就是（4,1）
-    '''
-    def avgB(self):
-        for layer in self.layers:
-            layer.B = (1/layer.M)* np.sum(layer.B, axis = 1, keepdims=True)
-        
 
     '''
         训练样本的拟合结果
     '''
-    def getFittingResult(self):
-        return self.layers[len(self.layers)-1].A
+    def getPrediction(self):
+        return self.layers[len(self.layers)-1].predict()
     
     '''
-        每一个样本的最终损失
+        每一次前向传播的损失+L2正则项
     '''
     def getLoss(self):
-        return self.layers[len(self.layers)-1].loss()
+        loss = self.layers[len(self.layers)-1].loss()
+        if(HyperParameter.L2_Reg):
+            paramVec = ParamVectorConverter.toParamVector(self)
+            L2loss = (HyperParameter.L2_lambd/(2 * self.dataSize) ) * (np.sum(paramVec * paramVec)) #L2正则化的损失
+            loss = loss + L2loss
+        return loss
     
     
     def backward(self):
@@ -105,15 +107,14 @@ class NeuralNet:
         for layer in self.layers:
             layer.outputInfo(file)
 
-    def train(self):
-        self.initialize()    
-        file = open("network.txt","w")
+    def train(self,logger = None):
+        self.initialize()            
         for i in range(self.iters):
             self.forward()
-#             file.write("第  "+str(i)+" 轮: \n")
-#             self.printLayers(file)
+            if logger is not None:
+                logger.log()
             self.backward()
-        file.close()
-        self.avgB()
         
-        
+    def predict(self):    
+        self.setMode(False)
+        self.forward()

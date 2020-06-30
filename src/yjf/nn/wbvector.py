@@ -27,8 +27,8 @@ class ParamVectorConverter(object):
     def toGradVector(net):
         vec = np.array([])
         for layer in net.layers:
-            vec = np.concatenate((vec,layer.dW.flatten()))
-            vec = np.concatenate((vec,layer.dB.flatten()))
+            vec = np.concatenate((vec, layer.dW.flatten()))
+            vec = np.concatenate((vec, layer.dB.flatten()))
         return vec
     
     
@@ -48,9 +48,7 @@ class ParamVectorConverter(object):
     def computeLoss(net,paramVec):
             ParamVectorConverter.fillNet(net, paramVec)
             net.forward()
-            loss0 = net.getLoss()
-            lossL2 = (net.layers[0].lambd/2) * (np.sum(paramVec * paramVec)) #L2正则化的损失
-            totalLoss = np.add(loss0, lossL2)
-            return totalLoss
+            loss = net.getLoss()
+            return loss
 
 

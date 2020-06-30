@@ -43,12 +43,12 @@ class Checker(object):
             origin = paramVec[i]
             
             paramVec[i] = origin + self.epsilon            
-            lss = ParamVectorConverter.computeLoss(self.network, paramVec)            
-            loss_plus[i] = lss[0]
+            lss = ParamVectorConverter.computeLoss(self.network, paramVec)  
+            loss_plus[i] = lss
             
             paramVec[i] = origin - self.epsilon
             lss = ParamVectorConverter.computeLoss(self.network, paramVec)            
-            loss_minus[i] = lss[0]
+            loss_minus[i] = lss
             
             paramVec[i] = origin #还原
             
@@ -77,21 +77,21 @@ class Checker(object):
 
 if __name__ == '__main__':
     net = NeuralNet()
-    
+    np.random.seed(1)
     inputlayer = InputLayer()
 #     inputlayer.setInputData(np.array([[1,2,3]]).T)    
     
-    Tr_x, Tr_y, T_x,T_y= DataGenerator.loadDataset()
-    inputlayer.setInputData(Tr_x[:,0].reshape(2,1))
+    Tr_x, Tr_y, T_x,T_y= DataGenerator.loadClassificationDataset()
+    inputlayer.setInputData(Tr_x)
     
     net.setInputLayer(inputlayer)
     
     net.addLayer(Layer(4,"ReLU",1))    
-    net.addLayer(Layer(4,"ReLU",1)) #这一层设为dropout的话，output层的Z会非常大
+    net.addLayer(Layer(4,"ReLU",1)) 
     
     outputlayer =  OutputLayer(1,"sigmoid",1)
 #     outputlayer.setExpectedOutput(np.array([0]).reshape(1,1))   
-    outputlayer.setExpectedOutput(Tr_y[:,0].reshape(1,1)) 
+    outputlayer.setExpectedOutput(Tr_y) 
     net.addLayer(outputlayer)
     net.initialize()
     
