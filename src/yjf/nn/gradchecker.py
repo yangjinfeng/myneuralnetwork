@@ -9,6 +9,7 @@ import numpy as np
 from yjf.nn.layer import InputLayer,Layer,OutputLayer
 from yjf.nn.network import NeuralNet
 from yjf.data.datagen import DataGenerator
+from yjf.data.datapy import DataContainer
 
 
 class Checker(object):
@@ -78,23 +79,18 @@ class Checker(object):
 if __name__ == '__main__':
     net = NeuralNet()
     np.random.seed(1)
-    inputlayer = InputLayer()
-#     inputlayer.setInputData(np.array([[1,2,3]]).T)    
     
     Tr_x, Tr_y, T_x,T_y= DataGenerator.loadClassificationDataset()
-    inputlayer.setInputData(Tr_x)
     
-    net.setInputLayer(inputlayer)
+    net.setTrainingData(Tr_x, Tr_y)
     
     net.addLayer(Layer(4,"ReLU",1))    
-    net.addLayer(Layer(4,"ReLU",1)) 
+    net.addLayer(Layer(4,"ReLU",1))     
+    net.addLayer(OutputLayer(1,"sigmoid",1))
     
-    outputlayer =  OutputLayer(1,"sigmoid",1)
-#     outputlayer.setExpectedOutput(np.array([0]).reshape(1,1))   
-    outputlayer.setExpectedOutput(Tr_y) 
-    net.addLayer(outputlayer)
-    net.initialize()
-    
+    net.inputLayer.setInputData(net.dataContainer.trainingdata[0][DataContainer.training_x])
+    net.layers[len(net.layers)-1].setExpectedOutput(net.dataContainer.trainingdata[0][DataContainer.training_y])
+
     #考虑正则化项的损失后，梯度检验的结果数量级在e-4
     checker = Checker(net)
     diff = checker.checkGrad()
