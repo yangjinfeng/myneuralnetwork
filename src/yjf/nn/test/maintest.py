@@ -43,14 +43,13 @@ def test1():
 
 
 def test2():
-    net = NeuralNet(9700)
     np.random.seed(1)
+    net = NeuralNet(9700)
     
     Tr_x, Tr_y, T_x,T_y= DataGenerator.loadClassificationDataset()
-    
-    inputlayer = InputLayer()
-    inputlayer.setInputData(Tr_x)    
-    net.setInputLayer(inputlayer)
+#     net.setMiniBatch(True)
+    net.setTrainingData(Tr_x, Tr_y)
+    net.setTestData(T_x, T_y)
     
     net.addLayer(Layer(40,"ReLU",0.9))   
 #     net.addLayer(Layer(40,"ReLU",0.9)) 
@@ -58,30 +57,26 @@ def test2():
 #     net.addLayer(Layer(4,"ReLU",1))
 #     net.addLayer(Layer(4,"ReLU",1))
 #     net.addLayer(Layer(4,"sigmoid",1))
-    net.addLayer(Layer(20,"ReLU",0.9)) #这一层设为dropout的话，output层的Z会非常大
+    net.addLayer(Layer(20,"ReLU",0.9))     
+    net.addLayer(OutputLayer(1,"sigmoid",1))
     
-    outputlayer =  OutputLayer(1,"sigmoid",1)
-    outputlayer.setExpectedOutput(Tr_y)    
-    net.addLayer(outputlayer)
     
     logger = MyLogger("loss.log")
     logger.setNetwork(net)
     print("begin to train ... " )
     tic = time.time()
-    net.train(logger)
+    net.train()
     logger.close()            
     
     toc = time.time()
-    fitting = net.getPrediction()
-    eval1 = Evaluator(Tr_y,fitting)
-    print(eval1.eval())
+#     fitting = net.getPrediction()
+#     eval1 = Evaluator(Tr_y,fitting)
+#     print(eval1.eval())
     print("time lasted: " + str(1000*(toc-tic)))
     
     print("begin to predict ... " )
 #     testlayer = InputLayer()
-    inputlayer.setInputData(T_x)
-    net.setInputLayerForPredict(inputlayer)
-    net.predict()
+    net.test()
     prd = net.getPrediction()
     eval2 = Evaluator(T_y,prd)
     print(eval2.eval())

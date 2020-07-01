@@ -7,12 +7,14 @@ Created on 2020年6月22日
 import numpy as np
 from yjf.nn.activate import factory
 from yjf.nn.cfg import HyperParameter
+from yjf.nn.wbvector import ParamVectorConverter
 
 class Layer:
     def __init__(self,N,actvaname,keep_prob):
         self.N = N     #当前层
         self.actva = factory(actvaname)
         self.keep_prob = keep_prob #dropout
+        self.net = None
         
         #初始化成员
         self.M = None
@@ -27,12 +29,20 @@ class Layer:
         self.preLayer = None
         self.nextLayer = None
         self.index = -1
+        #for Adam
+        self.VdW = None
+        self.SdW = None
+        self.VdB = None
+        self.SdB = None
     
     def setLayerIndex(self,index):
         self.index = index
 
-    def setDataSize(self,dataSize):
-        self.M = dataSize
+#     def setDataSize(self,dataSize):
+#         self.M = dataSize
+    
+    def setNetWork(self,net):
+        self.net = net
         
     def setPreLayer(self,layer):
         self.preLayer = layer
@@ -41,11 +51,14 @@ class Layer:
         self.nextLayer = layer
 
     def initialize(self):
-        self.W = np.random.randn(self.N,self.preLayer.N) * 0.01;
+        self.W = np.random.randn(self.N,self.preLayer.N) * 0.01;        
+        self.VdW = np.zeros((self.N,self.preLayer.N),dtype=float);
+        self.SdW = np.zeros((self.N,self.preLayer.N),dtype=float);
 #         self.W = np.random.randn(self.N,self.preLayer.N) * np.sqrt(2/(self.preLayer.N));
-#         self.B = np.random.randn(self.N,self.M)*0.001;
 #         self.B = np.zeros((self.N,1),dtype=float);
         self.B = np.random.randn(self.N,1) * 0.001  #对所有样本，B都是一样的
+        self.VdB = np.zeros((self.N,1),dtype=float) 
+        self.SdB = np.zeros((self.N,1),dtype=float) 
         
     def copy(self):
         newlayer = Layer(self.N,"",self.keep_prob)
@@ -57,6 +70,7 @@ class Layer:
     def forward(self,dropout):
         
         self.Z = np.matmul(self.W, self.preLayer.A) + self.B
+        self.M = self.Z.shape[1] #样本数
 #         self.A = self.activation(self.Z);
         self.A = self.actva.activate(self);
         #do dropout
@@ -65,11 +79,12 @@ class Layer:
             self.A = np.multiply(self.A, probMatrix) / self.keep_prob
             
         
-  
+    '''
+    常规的反向传播，即一次输入全体训练数据
+    '''
     def backward(self):
         if(self.isOutputLayer()):
             #尽量不做除法
-#             self.dA = -self.Y/self.A + (1-self.Y)/(1-self.A) 
 #             self.dA = self.deriveLoss()
             self.dZ = self.deriveLossByZ()
         else:
@@ -94,6 +109,45 @@ class Layer:
         self.W = self.W  - HyperParameter.alpha * self.dW
         self.B = self.B  - HyperParameter.alpha * self.dB
 
+
+    '''
+    mini-batch反向传播,参数t为批次，从1开始
+    '''
+    def backward_mini_batch(self,t):
+        if(self.isOutputLayer()):
+            #尽量不做除法
+#             self.dA = self.deriveLoss()
+            self.dZ = self.deriveLossByZ()
+        else:
+#             self.dA = np.matmul(self.nextLayer.W.T, self.nextLayer.dZ) #这个bug找了好久
+            self.dA = np.matmul(self.nextLayer.W0.T, self.nextLayer.dZ)
+            self.dZ =  self.dA * self.actva.derivative(self)        
+        
+#         self.dZ =  self.dA * self.actva.derivative(self)
+        self.dW = (1/self.M) * np.matmul(self.dZ, self.preLayer.A.T)
+        #L2 regularization
+        if(HyperParameter.L2_Reg):
+            L2_dW = (HyperParameter.L2_lambd / self.M) * self.W
+            self.dW = self.dW + L2_dW
+        
+        self.dB = (1/self.M) * np.sum(self.dZ, axis = 1, keepdims=True)
+        
+        #Adam算法
+        self.VdW = HyperParameter.beta1 * self.VdW + (1 - HyperParameter.beta1) * self.dW
+        self.VdB = HyperParameter.beta1 * self.VdB + (1 - HyperParameter.beta1) * self.dB
+        self.SdW = HyperParameter.beta2 * self.SdW + (1 - HyperParameter.beta2) * (self.dW * self.dW)
+        self.SdB = HyperParameter.beta2 * self.SdB + (1 - HyperParameter.beta2) * (self.dB * self.dB)
+        
+        beta1_temp = 1 - np.power(HyperParameter.beta1,t)
+        VdW_corrected = self.VdW / beta1_temp
+        VdB_corrected = self.VdB / beta1_temp
+        beta2_temp = 1 - np.power(HyperParameter.beta2,t)
+        SdW_corrected = self.SdW / beta2_temp
+        SdB_corrected = self.SdB / beta2_temp
+        
+        self.W0 = np.copy(self.W) #给前一层计算梯度使用
+        self.W = self.W  - HyperParameter.alpha * VdW_corrected / (np.sqrt(SdW_corrected) + HyperParameter.epslon)
+        self.B = self.B  - HyperParameter.alpha * VdB_corrected / (np.sqrt(SdB_corrected) + HyperParameter.epslon)
     
 
     def isOutputLayer(self):
@@ -162,11 +216,17 @@ class OutputLayer(Layer):
         self.cutoff = cutoff
     
     '''
-        最后一层计算样本的损失
+        最后一层计算样本的损失,包括正则项的损失
     '''
     def loss(self):
         eachloss  = np.multiply(-np.log(self.A), self.Y) + np.multiply(-np.log(1 - self.A), 1 - self.Y)
-        return (1/eachloss.shape[1]) * np.sum(eachloss, axis = 1, keepdims=True)[0][0]
+        loss = (1/eachloss.shape[1]) * np.sum(eachloss, axis = 1, keepdims=True)[0][0]
+        if(HyperParameter.L2_Reg):
+            dataSize = self.Y.shape[1]
+            paramVec = ParamVectorConverter.toParamVector(self.net)
+            L2loss = (HyperParameter.L2_lambd/(2 * dataSize) ) * (np.sum(paramVec * paramVec)) #L2正则化的损失
+            loss = loss + L2loss
+        return loss
     
     '''
     a=y^=σ(z)
