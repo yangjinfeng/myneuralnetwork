@@ -104,7 +104,8 @@ class NeuralNet:
         while(True):
             if(not currentLayer.isInputLayer()):
                 if t > 0:
-                    currentLayer.backward_mini_batch(t)
+#                     currentLayer.backward_mini_batch(t)
+                    currentLayer.backward_batchnorm(t)
                 else:
                     currentLayer.backward()
                 currentLayer = currentLayer.preLayer
@@ -137,6 +138,8 @@ class NeuralNet:
                 self.layers[len(self.layers)-1].setExpectedOutput(trainingdata[t][DataContainer.training_y])
                 self.forward()
                 self.backward(t+1)
+                
+
 
 
     '''

@@ -42,14 +42,14 @@ def test1():
     print(net.getOutput())
 
 
-def test2():
+def testOne():
     np.random.seed(1)
-    net = NeuralNet(9700)
+    net = NeuralNet(5000)
     
     Tr_x, Tr_y, T_x,T_y= DataGenerator.loadClassificationDataset()
-#     net.setMiniBatch(True)
+    net.setMiniBatch(False)
     net.setTrainingData(Tr_x, Tr_y)
-    net.setTestData(T_x, T_y)
+    
     
     net.addLayer(Layer(40,"ReLU",0.9))   
 #     net.addLayer(Layer(40,"ReLU",0.9)) 
@@ -74,17 +74,73 @@ def test2():
 #     print(eval1.eval())
     print("time lasted: " + str(1000*(toc-tic)))
     
-    print("begin to predict ... " )
-#     testlayer = InputLayer()
+    print("begin to predict training data... " )
+    net.setTestData(Tr_x, Tr_y)
+    net.test()
+    prd = net.getPrediction()
+    eval2 = Evaluator(Tr_y,prd)
+    print(eval2.eval())
+
+    
+    print("begin to predict test data... " )
+    net.setTestData(T_x, T_y)
+    net.test()
+    prd = net.getPrediction()
+    eval2 = Evaluator(T_y,prd)
+    print(eval2.eval())
+
+
+def testBatch():
+    np.random.seed(1)
+    net = NeuralNet(5000)
+    
+    Tr_x, Tr_y, T_x,T_y= DataGenerator.loadClassificationDataset()
+    net.setMiniBatch(True)
+    net.setTrainingData(Tr_x, Tr_y)
+    
+    
+    net.addLayer(Layer(40,"ReLU",0.9))   
+    net.addLayer(Layer(40,"ReLU",0.9)) 
+#     net.addLayer(Layer(4,"ReLU",1))
+#     net.addLayer(Layer(4,"ReLU",1))
+#     net.addLayer(Layer(4,"ReLU",1))
+#     net.addLayer(Layer(4,"sigmoid",1))
+    net.addLayer(Layer(20,"ReLU",0.9))     
+    net.addLayer(OutputLayer(1,"sigmoid",1))
+    
+    
+    logger = MyLogger("loss.log")
+    logger.setNetwork(net)
+    print("begin to train ... " )
+    tic = time.time()
+    net.train()
+    logger.close()            
+    
+    toc = time.time()
+#     fitting = net.getPrediction()
+#     eval1 = Evaluator(Tr_y,fitting)
+#     print(eval1.eval())
+    print("time lasted: " + str(1000*(toc-tic)))
+    
+    print("begin to predict training data... " )
+    net.setTestData(Tr_x, Tr_y)
+    net.test()
+    prd = net.getPrediction()
+    eval2 = Evaluator(Tr_y,prd)
+    print(eval2.eval())
+
+    
+    print("begin to predict test data... " )
+    net.setTestData(T_x, T_y)
     net.test()
     prd = net.getPrediction()
     eval2 = Evaluator(T_y,prd)
     print(eval2.eval())
 
 if __name__ == '__main__':
-    
-#     test1()
-    test2()
-    
+    print("-----------trainOne------------------")
+#     testOne()
+    print("-----------trainBatch------------------")
+    testBatch()
     
     
