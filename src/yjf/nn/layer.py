@@ -171,13 +171,17 @@ class Layer:
     '''
     def backward_batchnorm(self):
         if(self.isOutputLayer()):
-            #尽量不做除法
-            self.dA = self.deriveLoss()
+            #尽量不做除法,反向传播的起点最麻烦
+#             self.dA = self.deriveLoss()
+            dZ_tilde = self.deriveLossByZ()
+            self.dZ = self.plugin.plugin_backward(self,dZ_tilde)
         else:
 #             self.dA = np.matmul(self.nextLayer.W.T, self.nextLayer.dZ) #这个bug找了好久
             self.dA = np.matmul(self.nextLayer.W0.T, self.nextLayer.dZ)  #(n,m)
+            dZ_tilde =  self.dA * self.actva.derivative(self)#(n,m)  
+            self.dZ = self.plugin.plugin_backward(self,dZ_tilde)
         
-        self.dZ = self.plugin.plugin_backward(self)
+#         self.dZ = self.plugin.plugin_backward(self)
         
         self.dW = (1/self.M) * np.matmul(self.dZ, self.preLayer.A.T)
         #L2 regularization
@@ -319,7 +323,7 @@ class InputLayer(Layer):
 '''
 Logistics regression output layer
 '''   
-class OutputLayer(Layer):
+class BinaryOutputLayer(Layer):
     
     def setCutoff(self,cutoff):
         self.cutoff = cutoff
@@ -369,3 +373,59 @@ class OutputLayer(Layer):
         prdct[prdct>0.5]=1
         prdct[prdct<=0.5]=0
         return prdct
+
+'''
+softmax regression output layer
+'''   
+class MultiOutputLayer(Layer):
+    
+    def setCutoff(self,cutoff):
+        self.cutoff = cutoff
+    
+    '''
+        最后一层计算样本的损失,包括正则项的损失
+    '''
+    def loss(self):
+        eachloss  = np.multiply(-np.log(self.A), self.Y)
+        loss = (1/eachloss.shape[1]) * np.sum(eachloss, axis = 1, keepdims=True)[0][0]
+        if(HyperParameter.L2_Reg):
+            dataSize = self.Y.shape[1]
+            paramVec = ParamVectorConverter.toParamVector(self.net)
+            L2loss = (HyperParameter.L2_lambd/(2 * dataSize) ) * (np.sum(paramVec * paramVec)) #L2正则化的损失
+            loss = loss + L2loss
+        return loss
+    
+    '''
+    a=y^=σ(z)
+    Logistic regression: loss(a,y) = - ylog(a)  
+    da = derivative(loss(a,y)) = -y/a
+          输出层的损失函数对A求导，计算出dA即可，启动反向传播
+    '''
+    def deriveLoss(self):
+#         self.dA = -self.Y/self.A
+        eps = 1e-8 #防止分母为零
+        self.dA = -self.Y/(self.A+eps)
+        return self.dA
+
+    '''
+    dLoss/dA * dA/dZ
+    a-y
+    '''
+    def deriveLossByZ(self):
+        return self.A - self.Y
+
+    
+    def setExpectedOutput(self,output):
+#         self.Y = np.array([0,0,0,1,1]).reshape(1,5)
+        self.Y = output
+
+    def isOutputLayer(self):
+        return True
+    
+    def predict(self):
+        prdct = np.copy(self.A)
+        zmax = np.max(prdct,axis = 0,keepdims=True)
+        tmp = prdct-zmax
+        tmp[tmp>=0]=1
+        tmp[tmp<0]=0
+        return tmp

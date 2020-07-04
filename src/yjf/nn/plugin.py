@@ -56,8 +56,8 @@ class BatchNormPlugin(object):
 
         return self.Z_tilde
     
-    def plugin_backward(self,layer):
-        dZ_tilde =  layer.dA * layer.actva.derivative(layer)#(n,m)
+    def plugin_backward(self,layer,dZ_tilde):
+#         dZ_tilde =  layer.dA * layer.actva.derivative(layer)#(n,m)
         dgama = np.sum(dZ_tilde * self.Z_norm, axis = 1,keepdims=True) #(n,1),要不要除以m呢
         dbeta = np.sum(dZ_tilde, axis = 1,keepdims=True) #(n,1)，要不要除以m呢
         dZ_norm = dZ_tilde * self.gamma  #(n,m)
@@ -67,7 +67,7 @@ class BatchNormPlugin(object):
         https://kevinzakka.github.io/2016/09/14/batch_normalization/
         https://zhuanlan.zhihu.com/p/45614576?utm_source=wechat_session
         '''
-        m = layer.dA.shape[1]
+        m = dZ_tilde.shape[1]
         divied = m * np.sqrt(self.zvar+self.eps)        
         layer.dZ =  (m * dZ_norm - \
                np.sum(dZ_norm, axis = 1,keepdims=True) - \

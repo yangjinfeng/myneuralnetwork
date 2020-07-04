@@ -88,6 +88,25 @@ class LeakyReLU(Activation):
         x[x<0] = 0.01
         return x
 
+class Softmax(Activation):
+    
+#     def activate(self,layer):
+#         return np.maximum(0.01*layer.Z, layer.Z)
+
+    def activate(self,Z):
+        temp = np.max(Z,axis = 0,keepdims=True)
+        a=np.exp(Z-temp)
+        s = np.sum(a,axis=0)
+        return a/s
+
+    '''
+           是个nXn的矩阵,
+    i=j时，为 ai(1-ai)
+    i<>j时，为 -ai*aj
+    '''
+    def derivative(self,layer):
+        return layer.A * (1 - layer.A)
+
 
 def factory(name):
     if(name == "sigmoid"):
@@ -98,5 +117,7 @@ def factory(name):
         return LeakyReLU()
     elif (name == "tanh"):
         return Tanh()
+    elif (name == "softmax"):
+        return Softmax()    
     else:
         return Sigmoid()

@@ -165,7 +165,7 @@ class NeuralNet:
     def test(self):    
         self.setMode(False)
         self.inputLayer.setInputData(self.dataContainer.testdata[DataContainer.test_x])
-        self.layers[len(self.layers)-1].setExpectedOutput(self.dataContainer.testdata[DataContainer.test_y])
+#         self.layers[len(self.layers)-1].setExpectedOutput(self.dataContainer.testdata[DataContainer.test_y])
         self.forward()
         
     '''
