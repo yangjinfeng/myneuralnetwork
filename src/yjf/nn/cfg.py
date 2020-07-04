@@ -20,6 +20,9 @@ class HyperParameter(object):
     beta2 = 0.999 # for RMSProp
     epslon = 10e-8 # for RMSProp
     batch_size = 64
+    
+    #for learning rate decay
+    decay_rate = 1
 
     
     

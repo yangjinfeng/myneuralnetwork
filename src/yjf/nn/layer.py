@@ -169,7 +169,7 @@ class Layer:
     A-->Z-->Z_norm-->Z_tilde-->g(Z_tilde)-->A-->Z-->Z_norm-->Z_tilde-->g(Z_tilde)-->A-->Z
         每一层的反向传播从dA开始
     '''
-    def backward_batchnorm(self,t):
+    def backward_batchnorm(self):
         if(self.isOutputLayer()):
             #尽量不做除法
             self.dA = self.deriveLoss()
@@ -177,7 +177,7 @@ class Layer:
 #             self.dA = np.matmul(self.nextLayer.W.T, self.nextLayer.dZ) #这个bug找了好久
             self.dA = np.matmul(self.nextLayer.W0.T, self.nextLayer.dZ)  #(n,m)
         
-        self.dZ = self.plugin.plugin_backward(self, t)
+        self.dZ = self.plugin.plugin_backward(self)
         
         self.dW = (1/self.M) * np.matmul(self.dZ, self.preLayer.A.T)
         #L2 regularization
@@ -189,7 +189,7 @@ class Layer:
         self.paramdict["W"] = self.W
         #Adam算法
         #B合并到batch norm的beta参数了
-        ParameterUpdater.adamUpdate(self.paramdict, "dW", self.dW, "W", t)
+        ParameterUpdater.adamUpdate(self.paramdict, "dW", self.dW, "W")
         self.W = self.paramdict["W"]
 
 

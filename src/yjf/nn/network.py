@@ -9,6 +9,7 @@ import numpy as np
 # from yjf.nn.cfg import HyperParameter
 from yjf.data.datapy import DataContainer
 from yjf.nn.layer import InputLayer
+from yjf.nn.env import globalEnv
 
 class NeuralNet:
 
@@ -99,13 +100,13 @@ class NeuralNet:
 
     
     
-    def backward(self,t=0):
+    def backward(self):
         currentLayer = self.layers[len(self.layers)-1]
         while(True):
             if(not currentLayer.isInputLayer()):
-                if t > 0:
+                if self.isMiniBatch:
 #                     currentLayer.backward_mini_batch(t)
-                    currentLayer.backward_batchnorm(t)
+                    currentLayer.backward_batchnorm()
                 else:
                     currentLayer.backward()
                 currentLayer = currentLayer.preLayer
@@ -132,12 +133,14 @@ class NeuralNet:
     '''
     def trainMiniBatch(self):
         for i in range(self.iters):
+            globalEnv.currentEpoch= i+1
             trainingdata = self.dataContainer.trainingdata
             for t in range(len(trainingdata)):
+                globalEnv.currentBatch = t+1
                 self.inputLayer.setInputData(trainingdata[t][DataContainer.training_x])
                 self.layers[len(self.layers)-1].setExpectedOutput(trainingdata[t][DataContainer.training_y])
                 self.forward()
-                self.backward(t+1)
+                self.backward()
                 
 
 

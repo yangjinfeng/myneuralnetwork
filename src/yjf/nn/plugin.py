@@ -56,7 +56,7 @@ class BatchNormPlugin(object):
 
         return self.Z_tilde
     
-    def plugin_backward(self,layer,t):
+    def plugin_backward(self,layer):
         dZ_tilde =  layer.dA * layer.actva.derivative(layer)#(n,m)
         dgama = np.sum(dZ_tilde * self.Z_norm, axis = 1,keepdims=True) #(n,1),要不要除以m呢
         dbeta = np.sum(dZ_tilde, axis = 1,keepdims=True) #(n,1)，要不要除以m呢
@@ -74,8 +74,8 @@ class BatchNormPlugin(object):
                self.Z_norm * np.sum(dZ_norm * self.Z_norm, axis = 1,keepdims=True)) \
                / divied
         #Adam算法
-        ParameterUpdater.adamUpdate(self.paramdict, "dgama", dgama, "gamma", t)
-        ParameterUpdater.adamUpdate(self.paramdict, "dbeta", dbeta, "beta", t)
+        ParameterUpdater.adamUpdate(self.paramdict, "dgama", dgama, "gamma")
+        ParameterUpdater.adamUpdate(self.paramdict, "dbeta", dbeta, "beta")
         self.gamma = self.paramdict["gamma"]
         self.beta = self.paramdict["beta"]
         return layer.dZ
