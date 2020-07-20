@@ -8,6 +8,13 @@ import numpy as np
 from builtins import getattr
 import types
 from yjf.data.datagen import DataGenerator
+import sklearn
+import sklearn.datasets
+import scipy
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+from sklearn.preprocessing import OneHotEncoder,LabelEncoder
 
 class Student:
     
@@ -128,6 +135,94 @@ def evalN(golden,prediction):
     for i in range(golden.shape[1]):
         s = s + np.dot(golden[:,i],prediction[:,i])
     return s * 1.0 / golden.shape[1]    
+
+
+def testArraySplit():
+#     a=np.random.randint(1,9,(4,4))
+    a = np.array([[2,6,7,3]\
+                 ,[2,4,3,5]\
+                 ,[3,2,5,1]\
+                 ,[1,4,4,3]])
+    x = np.array([0,2,1])
+    print(a[x])  #取x给出的位置对应的行，组成新的数组，即取出第0行、第2行、第1行
+    '''
+        输出如下：
+        [[2 6 7 3]
+         [3 2 5 1]
+         [2 4 3 5]]
+    '''    
+    x = np.array([[0,2,1],[2,3,0]])
+    print(a[x])  #取x给出的位置对应的行，组成新的数组，即取出第0行、第2行、第1行,组成一个新的数组，取出第2行、第3行、第0行,组成另一个新的数组，最后组成三维数组
+    '''
+        输出如下：
+        [[[2 6 7 3]
+          [3 2 5 1]
+          [2 4 3 5]]
+        
+         [[3 2 5 1]
+          [1 4 4 3]
+          [2 6 7 3]]]
+    '''    
+    print(a[[0,2,1],[2,3,0]]) #依次取出（0,2）、（2,3）、（1,0）的值组成一个向量，输出[7 1 2]
+    print(a[0:2,0:3])#行的位置是0至2，列的位置是0至3，不包括最后一个位置，截取出一个小矩阵
+    
+    print(a[[0,2,1,3]][[2,3,0]]) #先取一次a[[0,2,1,3]]，效果类似于a[x]，再用同样的规则用[2,3,0]取一次
+    
+    print(a[2])
+    print(a[[2]])
+    print(a[2][0])
+    print(a[[2]][0])
+    print(a[[2]][[0]])
+
+
+def testreshape():
+    a = np.random.randn(20)
+    b =a.reshape(-1,1)  #等价于 a.reshape(len(a),1)
+    print(b.shape)
+    # print(b)
+
+    x=np.array([[1,2,3],[4,5,6],[7,8,9]])
+    print(x[0:2,-1])   #前两行的最后一列
+
+def testvstack():
+    a1=np.array([[1,1,1],[1,1,1]])
+    a2=np.array([[2,2,2],[2,2,2]])
+    v = np.vstack((a1,a2))
+    v2 = np.concatenate((a1,a2),axis=0)
+    h = np.hstack((a1,a2))
+    h2 = np.concatenate((a1,a2),axis=1)
+    print(v)
+    print(v2)
+    print(h)
+    print(h2)
+
+def testOnehotencoder():
+    oh = OneHotEncoder()
+    a=np.array(["A","A","B","C","A","B","C","C","D"])
+    ohc=oh.fit_transform(a.reshape(-1, 1))
+    print(ohc.A)
+    print(oh.categories_)
+    
+def testDummy():
+    oh = OneHotEncoder()
+    db = pd.read_csv("file:\\C:\\Users\\yangjinfeng\\git\\myneuralnetwork\\data\\extracted_variable_c12.csv")
+    c1=db["concourse_c1"]
+    #c1.describe()
+    c1array = c1.to_numpy()
+    ohc=oh.fit_transform(c1array.reshape(-1, 1))
+#     print(ohc.A)
+    dummy=pd.get_dummies(db,"concourse_c1")[0:3] #这种方式内存开销太大
+    print(dummy.shape)
+    
+def testtransform():
+    db = pd.read_csv("file:\\C:\\Users\\yangjinfeng\\git\\myneuralnetwork\\data\\extracted_variable_c12.csv")
+    data = db["has_c2"].to_numpy()
+    testdata = data.reshape(-1,1)
+    le= LabelEncoder()
+    lec = le.fit_transform(testdata)
+    print(testdata)
+    print(lec)
+    
     
 if __name__ == '__main__':
 #     testObjattr()
@@ -136,7 +231,12 @@ if __name__ == '__main__':
 #     testDict()
 #     testglobals()
 #     testClassificationData()
-    g = np.array([[0,0,1],[1,0,0],[0,1,0],[1,0,0],[0,1,0]]).T    
-    p = np.array([[0,0,1],[1,0,0],[0,1,0],[1,0,0],[1,0,0]]).T
-    r = evalN(g,p)
-    print(r)
+#     g = np.array([[0,0,1],[1,0,0],[0,1,0],[1,0,0],[0,1,0]]).T    
+#     p = np.array([[0,0,1],[1,0,0],[0,1,0],[1,0,0],[1,0,0]]).T
+#     r = evalN(g,p)
+#     print(r)
+    # testArraySplit()
+    # testreshape()
+#     testvstack()
+#     testOnehotencoder()
+    testtransform()

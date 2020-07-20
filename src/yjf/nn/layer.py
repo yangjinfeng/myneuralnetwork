@@ -325,6 +325,14 @@ Logistics regression output layer
 '''   
 class BinaryOutputLayer(Layer):
     
+    def __init__(self,N,actvaname,keep_prob,cutoff):
+        self.cutoff = cutoff
+        super(BinaryOutputLayer, self).__init__(N,actvaname,keep_prob)   
+    
+#     def __init__(self):
+#         self.cutoff = 0.5
+#         super(Layer, self).__init__(1,"sigmoid",1)
+        
     def setCutoff(self,cutoff):
         self.cutoff = cutoff
     
@@ -370,8 +378,8 @@ class BinaryOutputLayer(Layer):
     
     def predict(self):
         prdct = np.copy(self.A)
-        prdct[prdct>0.5]=1
-        prdct[prdct<=0.5]=0
+        prdct[prdct>self.cutoff]=1
+        prdct[prdct<=self.cutoff]=0
         return prdct
 
 '''
@@ -396,10 +404,7 @@ class MultiOutputLayer(Layer):
         return loss
     
     '''
-    a=y^=σ(z)
-    Logistic regression: loss(a,y) = - ylog(a)  
-    da = derivative(loss(a,y)) = -y/a
-          输出层的损失函数对A求导，计算出dA即可，启动反向传播
+    下面的计算不对，求导的结果是一个矩阵
     '''
     def deriveLoss(self):
 #         self.dA = -self.Y/self.A

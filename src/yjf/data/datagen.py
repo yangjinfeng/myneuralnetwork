@@ -6,8 +6,8 @@ Created on 2020年6月29日
 '''
 import numpy as np
 import matplotlib.pyplot as plt
-import sklearn
 import sklearn.datasets
+from sklearn.preprocessing import OneHotEncoder
 
 class DataGenerator(object):
     '''
@@ -62,12 +62,34 @@ class DataGenerator(object):
         #b[range(len(x)), x] = 1
         b = np.eye(num_class)[Y]
 #         return b
-        onehot = b[:][:][0].T
+        onehot = b[0].T
         return onehot
 #         print(Y.shape)
 #         print(onehot)
+ 
+    @staticmethod
+    def labelToOnehot3(Y):
+        x = Y.reshape(-1,1)
+        oh = OneHotEncoder()
+        ohc = oh.fit_transform(x).A 
+        return ohc.T
+#         print(Y.shape)
+#         print(onehot)
+ 
+    
+    @staticmethod
+    def labelToOnehot2(Y):    
+        x = Y[0]
+        num_class = np.max(x) + 1
+        b = np.zeros((num_class,len(x)))
+        '''
+                    切片赋值,索引可以是不超范围的索引序列或者是可产生索引序列的，比如range函数
+                    一般用一个方括号，不同维度索引用逗号隔开，多个方括号还有特殊意义，索引号里可以用冒号表示索引位置的起止范围
+        '''
+        b[x,range(len(x))] = 1
+#         print(b)
+        return b
         
-
     @staticmethod
     def loadNClassificationDataset(classes_num,train_num,test_num):
         np.random.seed(1)
@@ -80,7 +102,6 @@ class DataGenerator(object):
         test_X = test_X.T
         test_Y = test_Y.reshape((1, test_Y.shape[0]))
         test_Y = DataGenerator.labelToOnehot(test_Y)
-        
         return train_X, train_Y, test_X, test_Y
         
         
@@ -90,7 +111,7 @@ if __name__ == '__main__':
     print(Tr_x.shape)
     print(Tr_y.shape)
     print(T_x.shape)
-    print(T_y)
+#     print(T_y)
 
      
 #     print(Tr_x[:,0].reshape(2,1))
