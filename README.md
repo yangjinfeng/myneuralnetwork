@@ -1,2 +1,2 @@
-# myneuralnetwork
-# 2020-06023
+# myneuralnetwork practice
+# start from 2020-06-23
