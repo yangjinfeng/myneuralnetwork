@@ -15,6 +15,9 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from sklearn.preprocessing import OneHotEncoder,LabelEncoder
+import io
+import sys
+
 
 class Student:
     
@@ -222,6 +225,30 @@ def testtransform():
     lec = le.fit_transform(testdata)
     print(testdata)
     print(lec)
+
+
+def softmax(Z):
+    temp = np.max(Z,axis = 0,keepdims=True)
+    a=np.exp(Z-temp)
+    s = np.sum(a,axis=0)
+    return a/s
+
+
+def testRandomChoice():
+    # np.random.seed(1)
+    # x=np.random.randn(10)
+    # print(x)
+    # c = np.random.choice(x,2)
+    # print(c)
+    dic = ["哈","尔","滨","真","凉","快"]
+    pv = np.array([7,5,10.2,3,9,6])
+    p = softmax(pv)
+    for i in range(10):
+        c = np.random.choice(dic,3,p=p)
+        print(c)
+
+
+
     
     
 if __name__ == '__main__':
@@ -239,4 +266,6 @@ if __name__ == '__main__':
     # testreshape()
 #     testvstack()
 #     testOnehotencoder()
-    testtransform()
+    # testtransform()
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer,encoding='utf-8')
+    testRandomChoice()
