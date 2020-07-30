@@ -404,7 +404,7 @@ class MultiOutputLayer(Layer):
         return loss
     
     '''
-    下面的计算不对，求导的结果是一个矩阵
+    下面的计算不对，求导的结果是一个矩阵.
     '''
     def deriveLoss(self):
 #         self.dA = -self.Y/self.A
