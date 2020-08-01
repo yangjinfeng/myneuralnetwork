@@ -248,7 +248,13 @@ def testRandomChoice():
         print(c)
 
 
-
+def testT():
+    x = np.array([[1,2,3],[4,5,6]])
+    print(x)
+    x2 = x.T
+    print(x2)
+    x3 = x2.T
+    print(x3)
     
     
 if __name__ == '__main__':
@@ -267,5 +273,6 @@ if __name__ == '__main__':
 #     testvstack()
 #     testOnehotencoder()
     # testtransform()
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer,encoding='utf-8')
-    testRandomChoice()
+#     sys.stdout = io.TextIOWrapper(sys.stdout.buffer,encoding='utf-8')
+#     testRandomChoice()
+    testT()

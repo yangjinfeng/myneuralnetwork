@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.datasets
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.model_selection import train_test_split
 
 class DataGenerator(object):
     '''
@@ -103,17 +104,34 @@ class DataGenerator(object):
         test_Y = test_Y.reshape((1, test_Y.shape[0]))
         test_Y = DataGenerator.labelToOnehot(test_Y)
         return train_X, train_Y, test_X, test_Y
+
+    @staticmethod
+    def loadNClassificationDataset2(classes_num,train_num,test_num):
+        np.random.seed(1)
+        num = train_num + test_num
+        train_X, train_Y = sklearn.datasets.make_classification(n_samples=num, n_features=20, n_informative=2, n_redundant=2, n_repeated=0, n_classes=classes_num, n_clusters_per_class=1, weights=None, flip_y=0.01, class_sep=1.0, hypercube=True, shift=0.0, scale=1.0, shuffle=True, random_state=None)
+        X = train_X.T
+        train_Y = train_Y.reshape((1, train_Y.shape[0]))
+        Y = DataGenerator.labelToOnehot(train_Y)
+        
+        percent = test_num * 1.0 / num
+        X_train, X_test, y_train, y_test = train_test_split(X.T, Y.T, test_size=percent, random_state=1)
+        
+        return X_train.T, y_train.T, X_test.T, y_test.T
+
         
         
 if __name__ == '__main__':      
     Tr_x, Tr_y, T_x,T_y= DataGenerator.loadNClassificationDataset(4,10,5)  
-    
     print(Tr_x.shape)
     print(Tr_y.shape)
     print(T_x.shape)
-#     print(T_y)
-
-     
-#     print(Tr_x[:,0].reshape(2,1))
-#     print(Tr_y[:,0].reshape(1,1))
+    print(T_y.shape)
+    print("---------------")
+    
+    Tr_x, Tr_y, T_x,T_y= DataGenerator.loadNClassificationDataset2(4,10,5)  
+    print(Tr_x.shape)
+    print(Tr_y.shape)
+    print(T_x.shape)
+    print(T_y.shape)
     

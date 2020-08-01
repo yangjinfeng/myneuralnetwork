@@ -6,7 +6,7 @@ Created on 2020年6月27日
 '''
 from yjf.nn.wbvector import ParamVectorConverter
 import numpy as np
-from yjf.nn.layer import InputLayer,Layer,OutputLayer
+from yjf.nn.layer import InputLayer,Layer,BinaryOutputLayer
 from yjf.nn.network import NeuralNet
 from yjf.data.datagen import DataGenerator
 from yjf.data.datapy import DataContainer
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     
     net.addLayer(Layer(4,"ReLU",1))    
     net.addLayer(Layer(4,"ReLU",1))     
-    net.addLayer(OutputLayer(1,"sigmoid",1))
+    net.addLayer(BinaryOutputLayer(1,"sigmoid",1))
     
     net.inputLayer.setInputData(net.dataContainer.trainingdata[0][DataContainer.training_x])
     net.layers[len(net.layers)-1].setExpectedOutput(net.dataContainer.trainingdata[0][DataContainer.training_y])

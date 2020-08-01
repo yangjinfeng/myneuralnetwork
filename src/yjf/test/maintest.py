@@ -113,7 +113,7 @@ def testNClassesBatch():
     np.random.seed(1)
     net = NeuralNet(1000)
     
-    Tr_x, Tr_y, T_x,T_y= DataGenerator.loadNClassificationDataset(4,10000,1000)
+    Tr_x, Tr_y, T_x,T_y= DataGenerator.loadNClassificationDataset2(4,5000,1000)
     net.setMiniBatch(True)
     net.setTrainingData(Tr_x, Tr_y)    
     
