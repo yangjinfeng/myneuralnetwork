@@ -28,24 +28,6 @@ def load_dataset(filename):
     y = y.reshape((len(y), 1))
     return X, y
 
-# x,y=load_dataset(filename)
-# # oe = OrdinalEncoder()
-# oe = OneHotEncoder()
-# oe.fit(x)
-# X_train_enc = oe.transform(x)
-# print(X_train_enc.shape)
-# print(type(X_train_enc))
-# print(X_train_enc[0])
-
-# i =0
-# for a in X_train_enc[0]:
-# 	print(i)
-# 	print(a,"-")
-# le = LabelEncoder()
-# le.fit(y)
-# y_train_enc = le.transform(y)
-# print(y_train_enc.shape)
-# print(y_train_enc)
 
 
 def prepare_data(x,y):
@@ -62,25 +44,25 @@ def prepare_data(x,y):
 
 
 def test():
-	# load the dataset
-	X, y = load_dataset(filename)
-	# split into train and test sets
-	X_train_enc, X_test_enc, y_train_enc, y_test_enc = prepare_data(X, y)
-	print(X_train_enc.shape)
-	# define the  model
-	model = Sequential()
-	model.add(Dense(10, input_dim=X_train_enc.shape[1], activation='relu', kernel_initializer='he_normal'))
-	model.add(Dense(1, activation='sigmoid'))
-	# compile the keras model
-	model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-	# fit the keras model on the dataset
-	model.fit(X_train_enc, y_train_enc, epochs=100, batch_size=16, verbose=2)
-	# evaluate the keras model
-	_, accuracy = model.evaluate(X_test_enc, y_test_enc, verbose=0)
-	print('Accuracy: %.2f' % (accuracy*100))
-	print(_)
+    # load the dataset
+    X, y = load_dataset(filename)
+    # split into train and test sets
+    X_train_enc, X_test_enc, y_train_enc, y_test_enc = prepare_data(X, y)
+    print(X_train_enc.shape)
+    # define the  model
+    model = Sequential()
+    model.add(Dense(10, input_dim=X_train_enc.shape[1], activation='relu', kernel_initializer='he_normal'))
+    model.add(Dense(1, activation='sigmoid'))
+    # compile the keras model
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+    # fit the keras model on the dataset
+    model.fit(X_train_enc, y_train_enc, epochs=100, batch_size=16, verbose=0)
+    # evaluate the keras model
+    _, accuracy = model.evaluate(X_test_enc, y_test_enc, verbose=0)
+    print('Accuracy: %.2f' % (accuracy*100))
+    print(_)
 
 
 if __name__ == '__main__':
-	# pass
-	test()
+    # pass
+    test()

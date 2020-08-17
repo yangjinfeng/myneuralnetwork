@@ -8,7 +8,7 @@ import numpy as np
 
 class Activation(object):
     
-    def activate(self,layer):
+    def activate(self,Z):
         pass
     
     def derivative(self,layer):

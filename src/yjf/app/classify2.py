@@ -96,7 +96,7 @@ def test():
 	net.test()
 	prd = net.getPrediction()
 	eval2 = Evaluator(Tr_y,prd)
-	print(eval2.eval())
+	print(eval2.eval().accuracy())
 
 
 	print("begin to predict test data... " )
@@ -104,7 +104,7 @@ def test():
 	net.test()
 	prd = net.getPrediction()
 	eval2 = Evaluator(T_y,prd)
-	print(eval2.eval())
+	print(eval2.eval().accuracy())
 
 if __name__ == '__main__':
 	# pass

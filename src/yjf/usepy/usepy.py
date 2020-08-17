@@ -186,18 +186,50 @@ def testreshape():
 
     x=np.array([[1,2,3],[4,5,6],[7,8,9]])
     print(x[0:2,-1])   #前两行的最后一列
+    
+def testSqueeze():
+    e= np.arange(10)
+    a = e.reshape(1,1,10)
+    print(a.shape)
+    b = np.squeeze(a)
+    print(b.shape)
 
+'''
+二维数组的堆叠
+'''
 def testvstack():
     a1=np.array([[1,1,1],[1,1,1]])
     a2=np.array([[2,2,2],[2,2,2]])
-    v = np.vstack((a1,a2))
+    v = np.vstack((a1,a2)) #纵向堆叠
     v2 = np.concatenate((a1,a2),axis=0)
-    h = np.hstack((a1,a2))
+    h = np.hstack((a1,a2)) #横向堆叠
     h2 = np.concatenate((a1,a2),axis=1)
     print(v)
     print(v2)
     print(h)
     print(h2)
+
+    '''
+    由二维数组构造三位矩阵，在z方向堆叠
+    '''    
+def teststack():
+    #第一种方法，使用dstack方法
+    f1 = np.array([[1,0,-1],[1,0,-1],[1,0,-1]])
+    ff = np.dstack((f1,f1))
+    fff = np.dstack((ff,f1))
+    # ff = np.stack((f1,f1),axis=2)
+    print(fff)
+    print(fff[:,:,0])   
+    print("---------------")
+    #第二种方法，先构造出空矩阵，然后再z方向切片，对切片赋值
+    f1 = np.array([[1,0,-1],[1,0,-1],[1,0,-1]])
+    fa = np.zeros((3,3,3),dtype=int)
+    fa[:,:,0]=f1
+    fa[:,:,1]=f1
+    fa[:,:,2]=f1
+    print(fa)
+    print(fa[:,:,0])   
+
 
 def testOnehotencoder():
     oh = OneHotEncoder()
@@ -247,6 +279,14 @@ def testRandomChoice():
         c = np.random.choice(dic,3,p=p)
         print(c)
 
+def testArrayConcate():
+    tp = (1,2,3,4)
+    x = tp[:-1] + (0,)  #把前三个取出来，再拼接元组(0,)，此处逗号不能少
+    print(x)
+    a = [1,2,3]
+    b = a + [4]
+    print(b)
+
 
 def testT():
     x = np.array([[1,2,3],[4,5,6]])
@@ -255,7 +295,14 @@ def testT():
     print(x2)
     x3 = x2.T
     print(x3)
+
+def testConv():
+    x = np.array([[1,2,3],[4,5,6]])
+    np.convolve()   
     
+def funparam(x,*args,**kwargs):
+    print(type(args)) #tuple
+    print(type(kwargs)) #dict
     
 if __name__ == '__main__':
 #     testObjattr()
@@ -275,4 +322,8 @@ if __name__ == '__main__':
     # testtransform()
 #     sys.stdout = io.TextIOWrapper(sys.stdout.buffer,encoding='utf-8')
 #     testRandomChoice()
-    testT()
+#     testT()
+#     testArrayConcate()
+#     testSqueeze()
+#     teststack()
+    funparam(1)

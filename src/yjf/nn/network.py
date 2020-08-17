@@ -48,19 +48,6 @@ class NeuralNet:
         layer.setLayerIndex(len(self.layers)) #便于调试
         
     
-#     '''
-#            组装网络， 初始化各层的参数
-#     '''
-#     def initialize(self):
-#         self.inputLayer = InputLayer()
-#         self.layers[0].setPreLayer(self.inputLayer)
-#         index = 0
-#         self.inputLayer.setLayerIndex(index)
-#         for layer in self.layers:
-#             index = index + 1
-#             layer.setLayerIndex(index) #便于调试
-# #             layer.setDataSize(self.dataSize);
-#             layer.initialize()
     
     def copy(self):
         newnet = NeuralNet()
