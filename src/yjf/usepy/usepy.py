@@ -304,6 +304,25 @@ def funparam(x,*args,**kwargs):
     print(type(args)) #tuple
     print(type(kwargs)) #dict
     
+def createEmptyArray():
+    pos = np.empty((2,2), dtype = tuple)
+    pos[0,0]=(1,2)
+    pos[0,1]=(1,2)
+    pos[1,0]=(1,2)
+    pos[1,1]=(1,2)
+    print(pos)
+
+
+def testargmax():
+    np.random.seed(1)
+    mats = np.random.randint(0,8,size=(2,6,6,3))*1.0
+    # print(mats[0,:,:,0])
+    # out = np.empty((6,6), dtype = float)
+    out = np.empty((1), dtype = float)
+    x = np.argmax(mats[0,:,:,0],out=out)
+    
+    print(mats[0,:,:,0])
+    print(x)    
 if __name__ == '__main__':
 #     testObjattr()
 #     testmultipy()
@@ -326,4 +345,6 @@ if __name__ == '__main__':
 #     testArrayConcate()
 #     testSqueeze()
 #     teststack()
-    funparam(1)
+#     funparam(1)
+#     createEmptyArray()
+    testargmax()

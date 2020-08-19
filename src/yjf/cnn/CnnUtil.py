@@ -41,7 +41,7 @@ def convolve(cover,f):
     ele = cover * f
     return np.sum(ele)
 
-
+#mat_shape 二维数组的shape，或者三维数组的shape（第三维是通道）
 def getPadAndOutShape(mat_shape,filter_size,stride,padding):
     outshape = None
     pad_w = None
@@ -195,6 +195,17 @@ def pool(mat2d,method="MAX"):
     else:
         return np.mean(mat2d)
 
+'''
+    返回最大值和最大值的行和列的索引号
+'''
+def pool_max_argmax(mat2d):
+    pos = np.argmax(mat2d)
+    h = pos // mat2d.shape[1]
+    w = pos % mat2d.shape[1]
+    maxout = mat2d[h,w]
+    return maxout,(h,w)
+
+
 #mat2d是单通道矩阵
 def pool_f1_forward(mat2d,fsize,stride=1,padding="VALID",method="MAX"):
     f = fsize
@@ -256,6 +267,41 @@ def pool_forward(mats,fsize,stride=1,padding="VALID",method="MAX"):
         z_data.append(pool_one_forward(mats[i],fsize,stride,padding,method))
     return np.array(z_data)    
 
+'''
+返回max pooling的每个通道的结果和对应行和列的索引号，用于反向传播
+'''
+def pool_forward_max_argmax(mats,fsize,stride=1,padding="VALID"):
+    z_data = []
+    z_pos = []
+    f = fsize
+    
+    out_shape,pad_h,pad_w = getPadAndOutShape(mats.shape[1:3],fsize,stride,padding)
+    h = out_shape[0]
+    w = out_shape[1]
+    mats2 = np.pad(mats,((0,0),(pad_h[0],pad_h[1]),(pad_w[0],pad_w[1]),(0,0)),'constant',constant_values=(0,0)) 
+
+    for m in range(len(mats)):
+        channels = mats2.shape[3]
+        result = np.zeros((h,w,channels),dtype=float);
+        maxpos = np.empty(result.shape, dtype = tuple)
+        for c in range(channels):
+            pooled = result[:,:,c]
+            poses= maxpos[:,:,c]
+            for i in range(h):
+                i_s = i * stride
+                for j in range(w):
+                    j_s = j * stride
+                    cover = mats2[m,i_s:i_s + f,j_s:j_s + f,c]
+                    maxvalue, pos = pool_max_argmax(cover)
+                    pooled[i,j]=maxvalue
+                    opos = (pos[0]+i_s - pad_h[0], pos[1]+j_s - pad_w[0])
+                    poses[i,j]=opos
+
+        z_data.append(result)
+        z_pos.append(maxpos)
+    return np.array(z_data),np.array(z_pos)
+
+
 #mats是多个样本多通道矩阵，四维，
 #"NHWC": [batch, height, width, channels].
 def pool_forward_tf(mats,fsize,stride=1,padding="VALID",method="MAX"):
@@ -272,6 +318,58 @@ def pool_forward_tf(mats,fsize,stride=1,padding="VALID",method="MAX"):
 #     poolshape = [1,fsize,fsize,1]
 #     out = tf.nn.max_pool(mats,poolshape,strd,padding,)
     return np.array(out)
+
+
+def to_pos_tuple(p,w0,c0):
+    h1 = p//(w0*c0)
+    w1 = (p%(w0*c0))//c0
+    return (h1,w1)
+
+#mats是多个样本多通道矩阵，四维，
+#"NHWC": [batch, height, width, channels].
+def pool_forward_max_argmax_tf_v(mats,fsize,stride=1,padding="VALID"):
+#     strd = [1,stride,stride,1]
+#     poolshape = [1,fsize,fsize,1]
+# Add batch and channel dims (always 1).
+    maxout,pos = tf.nn.max_pool_with_argmax(mats,fsize,stride,padding)
+    oshp = mats.shape
+    pshp = pos.shape
+    posarray = np.array(pos)
+    w0 = oshp[2]
+    c0 = oshp[3]
+    #把操作转换矩阵操作
+    to_pos_tuple_v = np.vectorize(to_pos_tuple,otypes=[tuple],cache=False)
+    postuple = to_pos_tuple_v(posarray,w0,c0)
+    
+    return np.array(maxout),postuple
+
+
+#mats是多个样本多通道矩阵，四维，
+#"NHWC": [batch, height, width, channels].
+def pool_forward_max_argmax_tf(mats,fsize,stride=1,padding="VALID"):
+#     strd = [1,stride,stride,1]
+#     poolshape = [1,fsize,fsize,1]
+# Add batch and channel dims (always 1).
+    maxout,pos = tf.nn.max_pool_with_argmax(mats,fsize,stride,padding)
+    oshp = mats.shape
+    pshp = pos.shape
+    posarray = np.array(pos)
+    
+    postuple = np.empty(pos.shape, dtype = tuple)
+    w0 = oshp[2]
+    c0 = oshp[3]
+    for m in range(pshp[0]):
+        for c in range(pshp[3]):
+            for i in range(pshp[1]):
+                for j in range(pshp[2]):
+                    p = posarray[m,i,j,c]
+                    h1=p//(w0*c0)
+                    w1 = (p%(w0*c0))//c0
+                    c1 = (p%(w0*c0))%c0
+                    postuple[m,i,j,c] = (h1,w1)
+                    if c!=c1:
+                        print("error")
+    return np.array(maxout),postuple
 
 '''
 根据当前层的dZ计算上一层的dA
@@ -363,6 +461,42 @@ def conv_backprop_filter_tf(inputmats,filter_sizes,out_backprop,stride,padding='
                                                    padding=padding)
     return np.array(d_w_backprop_filter)
     
+
+
+def max_pooling_backprop(input_sizes,out_backprop,max_pos):
+    dZ = out_backprop
+    dA = np.zeros(input_sizes,dtype=float)
+    
+    for m in range(input_sizes[0]): #样本数
+        for c in range(dZ.shape[3]): #dZ的通道数
+            for i in range(dZ.shape[1]):
+                for j in range(dZ.shape[2]):
+                    pos = max_pos[m,i,j,c]
+                    dA[m,pos[0],pos[1],c] = dA[m,pos[0],pos[1],c] + dZ[m,i,j,c]
+    return dA
+
+def avg_pooling_backprop(input_sizes,pool_size,out_backprop,stride,padding='VALID'):
+    _,pad_h,pad_w = getPadAndOutShape(input_sizes[1:],pool_size,stride,padding)
+    
+    f = pool_size
+    avg_coef = 1/(f*f)
+    dZ = out_backprop
+    dA = np.zeros(input_sizes,dtype=float)
+    dA2 = np.pad(dA,((0,0),(pad_h[0],pad_h[1]),(pad_w[0],pad_w[1]),(0,0)),'constant',constant_values=(0,0))
+    
+    for m in range(input_sizes[0]): #样本数
+        for c in range(dZ.shape[3]): #dZ的通道数
+            for i in range(dZ.shape[1]):
+                i_s = i * stride
+                for j in range(dZ.shape[2]):
+                    j_s = j * stride
+                    dA2[m, i_s:i_s+f, j_s:j_s+f] = dA2[m, i_s:i_s+f, j_s:j_s+f] + dZ[m,i,j,c] * avg_coef
+                    
+    (_,h,w,_) = dA2.shape
+    return dA2[:,pad_h[0]:h-pad_h[1],pad_w[0]:w-pad_w[1],:]
+
+
+
 
 if __name__ == '__main__':
     #构造两个三通道卷积核
