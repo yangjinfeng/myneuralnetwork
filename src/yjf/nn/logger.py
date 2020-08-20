@@ -22,7 +22,10 @@ class MyLogger(object):
     
     
     def log(self):
-        self.file.write(str(self.net.iterCounter)+","+str(self.net.getLoss())+"\n")
+        iter = str(self.net.iterCounter)
+        self.file.write(iter+","+str(self.net.getLoss())+"\n")
+#         self.file.write(iter+","+str(self.net.getPrediction())+"\n\n")
+        
     
     def close(self):
         self.file.close()

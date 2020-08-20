@@ -19,7 +19,7 @@ class Sigmoid(Activation):
     
     def __init__(self):
         self.max = 50
-        self.min = -5
+        self.min = -50
 
     def activate(self,Z):
         

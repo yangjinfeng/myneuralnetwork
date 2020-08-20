@@ -15,6 +15,10 @@ def load_dataset():
     train_dataset = h5py.File('C:/Users/admin/mycnn/datasets/train_catvnoncat.h5', "r")
     train_set_x_orig = np.array(train_dataset["train_set_x"][:]) # your train set features
     train_set_y_orig = np.array(train_dataset["train_set_y"][:]) # your train set labels
+    
+#     train_set_x_orig = np.array(train_dataset["train_set_x"][0:10]) # your train set features
+#     train_set_y_orig = np.array(train_dataset["train_set_y"][0:10]) # your train set labels
+
 
     test_dataset = h5py.File('C:/Users/admin/mycnn/datasets/test_catvnoncat.h5', "r")
     test_set_x_orig = np.array(test_dataset["test_set_x"][:]) # your test set features
@@ -38,4 +42,5 @@ def loadData1():
 
 
 if __name__ == '__main__':
-    pass
+    tr_x,tr_y = loadData1()
+    print(tr_x.shape)

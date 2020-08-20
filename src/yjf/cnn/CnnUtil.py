@@ -41,7 +41,7 @@ def convolve(cover,f):
     ele = cover * f
     return np.sum(ele)
 
-#mat_shape 二维数组的shape，或者三维数组的shape（第三维是通道）
+#mat_shape 二维数组的shape，或者三维数组的shape（第三维是通道）,返回pad的大小和padding后输出的shape
 def getPadAndOutShape(mat_shape,filter_size,stride,padding):
     outshape = None
     pad_w = None
@@ -67,6 +67,21 @@ def getPadAndOutShape(mat_shape,filter_size,stride,padding):
         pad_h = (0,0)
         pad_w = (0,0)
     return outshape,pad_h,pad_w
+
+#mat_shape 二维数组的shape，或者三维数组的shape（第三维是通道）,返回padding后输出的shape
+def getPadedOutShape(mat_shape,filter_size,stride,padding):
+    outshape = None
+    h = mat_shape[0]
+    w = mat_shape[1]
+    if padding == "SAME":
+        out_h = int(np.ceil(float(h)/float(stride)))
+        out_w = int(np.ceil(float(w)/float(stride)))
+        outshape = (out_h,out_w)
+    else:
+        out_h = int(np.ceil(float(h - filter_size + 1)/float(stride)))
+        out_w = int(np.ceil(float(w - filter_size + 1)/float(stride)))
+        outshape = (out_h,out_w)
+    return outshape
 
 # mats: [batch, height, width, channels]
 def mypad(mats,pad_h,pad_w):
@@ -495,8 +510,25 @@ def avg_pooling_backprop(input_sizes,pool_size,out_backprop,stride,padding='VALI
     (_,h,w,_) = dA2.shape
     return dA2[:,pad_h[0]:h-pad_h[1],pad_w[0]:w-pad_w[1],:]
 
+'''
+mats:  "NHWC": [batch, height, width, channels].
+return (n,m)  m = batch, n = height*width*channels
+'''
+def matrix_to_flattened(mats):
+    m,h,w,c = mats.shape
+    n = h*w*c
+    flattened = np.empty((n,m), dtype = float)
+    for i in range(m):
+        flattened[:,i] = mats[i].flatten()
+    return flattened
 
 
+def flattened_to_matrix(flattened,matrix_shape):
+    _,m = flattened.shape
+    matrix = np.empty(matrix_shape, dtype = float)
+    for i in range(m):
+        matrix[i] = flattened[:,i].reshape(matrix_shape[1:])
+    return matrix
 
 if __name__ == '__main__':
     #构造两个三通道卷积核

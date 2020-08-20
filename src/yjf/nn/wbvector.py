@@ -19,8 +19,10 @@ class ParamVectorConverter(object):
     def toParamVector(net):
         vec = np.array([])
         for layer in net.layers:
-            vec = np.concatenate((vec,layer.W.flatten()))
-            vec = np.concatenate((vec,layer.B.flatten()))
+            if hasattr(layer,'W'):
+                vec = np.concatenate((vec,layer.W.flatten()))
+            if hasattr(layer,'B'):
+                vec = np.concatenate((vec,layer.B.flatten()))
         return vec
     
     @staticmethod           
