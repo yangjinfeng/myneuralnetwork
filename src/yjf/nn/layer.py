@@ -103,9 +103,11 @@ class Layer:
             self.dZ = self.deriveLossByZ()
         else:
 #             self.dA = np.matmul(self.nextLayer.W.T, self.nextLayer.dZ) #这个bug找了好久
-            self.dA = np.matmul(self.nextLayer.W0.T, self.nextLayer.dZ)
-            self.dZ =  self.dA * self.actva.derivative(self)        
-        
+#             self.dA = np.matmul(self.nextLayer.W0.T, self.nextLayer.dZ)#这里有点拧吧了
+            self.dZ =  self.dA * self.actva.derivative(self)      
+        #------      
+        self.preLayer.dA = np.matmul(self.W.T, self.dZ)#应该是这样的，先放这里，后续再改
+        #------
 #         self.dZ =  self.dA * self.actva.derivative(self)
         self.dW = (1/self.M) * np.matmul(self.dZ, self.preLayer.A.T)
         #L2 regularization
@@ -119,7 +121,7 @@ class Layer:
 #         if(HyperParameter.L2_Reg):
 #             weight_decay = 1 - HyperParameter.alpha * HyperParameter.L2_lambd / self.M
 
-        self.W0 = np.copy(self.W) #给前一层计算梯度使用
+#         self.W0 = np.copy(self.W) #给前一层计算梯度使用
         self.W = self.W  - HyperParameter.alpha * self.dW
         self.B = self.B  - HyperParameter.alpha * self.dB
 
@@ -134,10 +136,11 @@ class Layer:
             self.dZ = self.deriveLossByZ()
         else:
 #             self.dA = np.matmul(self.nextLayer.W.T, self.nextLayer.dZ) #这个bug找了好久
-            self.dA = np.matmul(self.nextLayer.W0.T, self.nextLayer.dZ)
+#             self.dA = np.matmul(self.nextLayer.W0.T, self.nextLayer.dZ)
             self.dZ =  self.dA * self.actva.derivative(self)        
         
 #         self.dZ =  self.dA * self.actva.derivative(self)
+        self.preLayer.dA = np.matmul(self.W.T, self.dZ)#应该是这样的，
         self.dW = (1/self.M) * np.matmul(self.dZ, self.preLayer.A.T)
         #L2 regularization
         if(HyperParameter.L2_Reg):
@@ -159,7 +162,7 @@ class Layer:
         SdW_corrected = self.SdW / beta2_temp
         SdB_corrected = self.SdB / beta2_temp
         
-        self.W0 = np.copy(self.W) #给前一层计算梯度使用
+#         self.W0 = np.copy(self.W) #给前一层计算梯度使用
         self.W = self.W  - HyperParameter.alpha * VdW_corrected / (np.sqrt(SdW_corrected) + HyperParameter.epslon)
         self.B = self.B  - HyperParameter.alpha * VdB_corrected / (np.sqrt(SdB_corrected) + HyperParameter.epslon)
 
@@ -176,11 +179,10 @@ class Layer:
             dZ_tilde = self.deriveLossByZ()
             self.dZ = self.plugin.plugin_backward(self,dZ_tilde)
         else:
-#             self.dA = np.matmul(self.nextLayer.W.T, self.nextLayer.dZ) #这个bug找了好久
-            self.dA = np.matmul(self.nextLayer.W0.T, self.nextLayer.dZ)  #(n,m)
             dZ_tilde =  self.dA * self.actva.derivative(self)#(n,m)  
             self.dZ = self.plugin.plugin_backward(self,dZ_tilde)
         
+        self.preLayer.dA = np.matmul(self.W.T, self.dZ)#应该是这样的，
 #         self.dZ = self.plugin.plugin_backward(self)
         
         self.dW = (1/self.M) * np.matmul(self.dZ, self.preLayer.A.T)
@@ -189,7 +191,7 @@ class Layer:
             L2_dW = (HyperParameter.L2_lambd / self.M) * self.W
             self.dW = self.dW + L2_dW
         
-        self.W0 = np.copy(self.W) #给前一层计算梯度使用
+#         self.W0 = np.copy(self.W) #给前一层计算梯度使用
         self.paramdict["W"] = self.W
         #Adam算法
         #B合并到batch norm的beta参数了
